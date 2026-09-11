@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>音の神経衰弱 — みんなでiPhoneを囲む、音だけの神経衰弱</title>
+<meta name="description" content="カードをめくると曲が5秒だけ流れる。手がかりは音だけ。Apple Musicのカタログ全体からランダムに出題されるので、誰のライブラリにも有利不利がありません。最大12人。">
+<meta property="og:title" content="音の神経衰弱 — SOUND MEMORY">
+<meta property="og:description" content="カードをめくると曲が5秒だけ流れる。手がかりは音だけ。最大12人でiPhoneを囲んで遊べます。">
+<meta property="og:image" content="images/01-board.jpg">
+<meta property="og:type" content="website">
+<link rel="icon" href="images/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07080d; --ink:#1b2033; --deep:#0b0e17;
+    --text:#eaecf4; --cyan:#5fe3f5; --purple:#7b5cff; --pink:#ff7adf; --gold:#ffc85f;
+    --line:rgba(255,255,255,.10);
+    --maxw:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Sans",system-ui,sans-serif;
+    line-height:1.8; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{font-family:"Dela Gothic One","Zen Kaku Gothic New",system-ui,sans-serif; font-weight:400; letter-spacing:.01em; line-height:1.25}
+  a{color:var(--cyan)}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+  .em{color:var(--cyan)}
+  .kicker{font-size:11px; letter-spacing:.34em; color:rgba(234,236,244,.42); margin:0 0 10px; font-weight:700}
+
+  /* ---- 背景に広がる同心円。アプリの波紋と同じモチーフ ---- */
+  .ripple{position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none}
+  .ripple i{
+    position:absolute; left:50%; top:38%; border-radius:50%;
+    border:1px solid rgba(95,227,245,.16); transform:translate(-50%,-50%);
+    animation:spread 9s cubic-bezier(.2,.6,.3,1) infinite;
+  }
+  .ripple i:nth-child(2){animation-delay:1.8s; border-color:rgba(123,92,255,.16)}
+  .ripple i:nth-child(3){animation-delay:3.6s}
+  .ripple i:nth-child(4){animation-delay:5.4s; border-color:rgba(123,92,255,.16)}
+  .ripple i:nth-child(5){animation-delay:7.2s}
+  @keyframes spread{
+    0%{width:0; height:0; opacity:0}
+    12%{opacity:.9}
+    100%{width:2200px; height:1900px; opacity:0}
+  }
+  .glow{position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(60% 40% at 50% 6%, rgba(95,227,245,.14), transparent 62%),
+      radial-gradient(70% 45% at 50% 100%, rgba(255,122,223,.10), transparent 60%);
+  }
+  @media (prefers-reduced-motion: reduce){ .ripple i{animation:none; opacity:0} }
+
+  /* ---- ヘッダ ---- */
+  header{position:sticky; top:0; z-index:10; backdrop-filter:blur(14px);
+    background:rgba(7,8,13,.72); border-bottom:1px solid var(--line)}
+  header .wrap{display:flex; align-items:center; gap:12px; height:62px}
+  header img{width:32px; height:32px; border-radius:8px}
+  header .name{font-size:15px; font-weight:700}
+  header nav{margin-left:auto; display:flex; gap:22px; font-size:13px}
+  header nav a{color:rgba(234,236,244,.62); text-decoration:none}
+  header nav a:hover{color:var(--text)}
+  @media (max-width:700px){ header nav{display:none} }
+
+  /* ---- ヒーロー ---- */
+  .hero{padding:78px 0 40px; text-align:center}
+  .hero .icon{width:104px; height:104px; border-radius:24px; box-shadow:0 26px 46px -22px #000; margin-bottom:26px}
+  .hero h1{font-size:clamp(34px,7vw,58px); margin:0 0 16px}
+  .hero p.lead{font-size:clamp(15px,2.2vw,18px); color:rgba(234,236,244,.72); margin:0 auto; max-width:30em}
+  .tag{display:inline-block; font-size:11px; letter-spacing:.32em; color:rgba(234,236,244,.42); margin-top:18px}
+  .cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:32px}
+  .btn{display:inline-flex; align-items:center; gap:9px; height:56px; padding:0 28px; border-radius:18px;
+    font-family:"Dela Gothic One",system-ui; font-size:15px; letter-spacing:.08em; text-decoration:none;
+    color:#06121a; background:linear-gradient(150deg,#b9ffe2,var(--cyan) 48%,#35b7e0);
+    box-shadow:0 0 40px rgba(95,227,245,.28); transition:transform .18s ease}
+  .btn:hover{transform:translateY(-2px)}
+  .btn.ghost{background:transparent; color:rgba(234,236,244,.75); border:1px solid var(--line); box-shadow:none}
+  .btn.soon{opacity:.55; pointer-events:none}
+
+  .shot-hero{margin:52px auto 0; max-width:330px}
+  .phone{border-radius:44px; padding:10px; background:linear-gradient(160deg,#2a3050,#0d1120);
+    box-shadow:0 50px 80px -40px #000, 0 0 0 1px rgba(255,255,255,.07)}
+  .phone img{display:block; width:100%; border-radius:35px}
+
+  /* ---- セクション ---- */
+  section{padding:72px 0}
+  .center{text-align:center}
+  h2{font-size:clamp(24px,4.4vw,34px); margin:0 0 14px}
+  .sub{color:rgba(234,236,244,.6); margin:0 auto 44px; max-width:34em; font-size:15px}
+
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(268px,1fr)); gap:16px}
+  .card{border-radius:22px; padding:26px 24px; border:1px solid var(--line);
+    background:linear-gradient(165deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 18px 30px -24px #000}
+  .card .ic{width:44px; height:44px; border-radius:13px; display:grid; place-items:center; font-size:21px; margin-bottom:16px;
+    background:rgba(95,227,245,.12); border:1px solid rgba(95,227,245,.28)}
+  .card.p .ic{background:rgba(255,122,223,.12); border-color:rgba(255,122,223,.28)}
+  .card.g .ic{background:rgba(255,200,95,.12); border-color:rgba(255,200,95,.28)}
+  .card.v .ic{background:rgba(123,92,255,.14); border-color:rgba(123,92,255,.3)}
+  .card h3{font-size:17px; margin:0 0 8px}
+  .card p{margin:0; font-size:14px; color:rgba(234,236,244,.62); line-height:1.85}
+
+  /* ---- あそびかた ---- */
+  .steps{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; counter-reset:s}
+  .step{position:relative; padding:26px 24px 24px; border-radius:22px; border:1px solid var(--line); background:rgba(255,255,255,.03)}
+  .step::before{counter-increment:s; content:counter(s);
+    font-family:"Dela Gothic One",system-ui; font-size:13px; color:#06121a;
+    width:30px; height:30px; border-radius:10px; display:grid; place-items:center;
+    background:linear-gradient(150deg,#b9ffe2,var(--cyan)); margin-bottom:14px}
+  .step h3{font-size:16px; margin:0 0 6px}
+  .step p{margin:0; font-size:14px; color:rgba(234,236,244,.62)}
+
+  /* ---- スクリーンショット ---- */
+  .gallery{display:flex; gap:20px; overflow-x:auto; padding:6px 24px 24px; scroll-snap-type:x mandatory}
+  .gallery figure{margin:0; flex:0 0 232px; scroll-snap-align:center}
+  .gallery img{width:100%; border-radius:26px; border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 30px 50px -34px #000}
+  .gallery figcaption{margin-top:12px; font-size:12px; color:rgba(234,236,244,.5); text-align:center}
+
+  /* ---- 仕様・FAQ ---- */
+  .split{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px}
+  details{border:1px solid var(--line); border-radius:16px; padding:18px 20px; background:rgba(255,255,255,.03); margin-bottom:10px}
+  details summary{cursor:pointer; font-weight:700; font-size:15px; list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"＋"; color:var(--cyan); margin-right:10px; font-weight:700}
+  details[open] summary::before{content:"−"}
+  details p{margin:12px 0 0; font-size:14px; color:rgba(234,236,244,.65)}
+
+  table.spec{width:100%; border-collapse:collapse; font-size:14px}
+  table.spec th,table.spec td{text-align:left; padding:12px 4px; border-bottom:1px solid var(--line); vertical-align:top}
+  table.spec th{color:rgba(234,236,244,.5); font-weight:500; width:9em; white-space:nowrap}
+
+  footer{padding:52px 0 70px; border-top:1px solid var(--line); text-align:center; color:rgba(234,236,244,.38); font-size:12px}
+  footer .note{max-width:40em; margin:0 auto 18px; line-height:1.9}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="ripple"><i></i><i></i><i></i><i></i><i></i></div>
+
+<header>
+  <div class="wrap">
+    <img src="images/icon.png" alt="">
+    <span class="name">音の神経衰弱</span>
+    <nav>
+      <a href="#feature">特長</a>
+      <a href="#play">あそびかた</a>
+      <a href="#shots">画面</a>
+      <a href="#faq">よくある質問</a>
+      <a href="privacy.html">プライバシー</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero wrap">
+  <img class="icon" src="images/icon.png" alt="音の神経衰弱 アイコン">
+  <h1>音の<span class="em">神経衰弱</span></h1>
+  <p class="lead">カードをめくると、曲が5秒だけ流れる。<br>ジャケットも曲名も出ない。手がかりは音だけ。</p>
+  <div class="tag">SOUND MEMORY</div>
+  <div class="cta">
+    <a class="btn soon" href="#">App Store（準備中）</a>
+    <a class="btn ghost" href="#play">あそびかたを見る</a>
+  </div>
+  <div class="shot-hero">
+    <div class="phone"><img src="images/01-board.jpg" alt="盤面。カードが同心の楕円に並び、席が画面のまわりを囲む"></div>
+  </div>
+</div>
+
+<section id="feature" class="wrap">
+  <div class="center">
+    <p class="kicker">FEATURES</p>
+    <h2>誰のライブラリにも、<br>有利不利がない</h2>
+    <p class="sub">出題はApple Musicのカタログ全体からランダム。この端末のライブラリ・プレイリスト・再生履歴は一切使いません。だから初対面どうしでも、同じ条件で勝負できます。</p>
+  </div>
+  <div class="cards">
+    <div class="card">
+      <div class="ic">🎧</div>
+      <h3>5秒だけ鳴る</h3>
+      <p>めくったカードから曲が数秒だけ流れます。2〜15秒で調整でき、どこから鳴らすかも選べます。同じカードでも毎回ちがう場所を鳴らせば、難度は一気に上がります。</p>
+    </div>
+    <div class="card p">
+      <div class="ic">🌏</div>
+      <h3>カタログ全体からランダム</h3>
+      <p>人気チャートと無作為な検索を毎回混ぜて集めます。直近に出した曲は次のゲームで後回しになるので、続けて遊んでも同じ曲が続きません。</p>
+    </div>
+    <div class="card v">
+      <div class="ic">🎚️</div>
+      <h3>ジャンル・年代・アーティスト</h3>
+      <p>11ジャンルと7年代を掛け合わせて出題範囲を決められます。アーティスト名を打てばその人の曲だけに。カンマ区切りで複数人まとめて指定もできます。</p>
+    </div>
+    <div class="card g">
+      <div class="ic">👑</div>
+      <h3>最大12人で囲める</h3>
+      <p>席は画面のまわりに均等に並び、得点は各自の向きで読めます。連戦の勝ち数は王冠で記録。ゲーム開始時はルーレットが回って、最初の人をランダムに決めます。</p>
+    </div>
+    <div class="card">
+      <div class="ic">📊</div>
+      <h3>人気順で難度を選ぶ</h3>
+      <p>トップ20・50・100から出題範囲を絞れます。誰でも知っている曲だけで遊ぶことも、深いところまで掘ることも。条件に足りない範囲は選べないようになっています。</p>
+    </div>
+    <div class="card p">
+      <div class="ic">💿</div>
+      <h3>そろうと、大きく出る</h3>
+      <p>ペアがそろうと曲名とジャケットが画面の中央に大きく現れ、取った人の手元へ飛んでいきます。何を取ったかが、その場の全員に分かります。</p>
+    </div>
+  </div>
+</section>
+
+<section id="play" class="wrap">
+  <div class="center">
+    <p class="kicker">HOW TO PLAY</p>
+    <h2>あそびかた</h2>
+    <p class="sub">テーブルの真ん中にiPhoneを置いて、みんなで囲むだけ。</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <h3>条件を決める</h3>
+      <p>人数、カード枚数、ジャンルや年代を決めて「GAME START」。曲がそろうまで少し待ちます。</p>
+    </div>
+    <div class="step">
+      <h3>2枚めくる</h3>
+      <p>カードをタップすると曲が数秒鳴ります。同じ曲だと思う2枚を当てられたら、そのペアは自分のものに。</p>
+    </div>
+    <div class="step">
+      <h3>次の人へ</h3>
+      <p>外したら次の人の番。待ちきれないときは画面の余白をタップすれば、曲を止めてすぐ次へ進めます。</p>
+    </div>
+  </div>
+</section>
+
+<section id="shots">
+  <div class="wrap center">
+    <p class="kicker">SCREENS</p>
+    <h2>画面</h2>
+    <p class="sub">横にスクロールできます。</p>
+  </div>
+  <div class="gallery">
+    <figure><img src="images/01-board.jpg" alt="盤面"><figcaption>盤面。席は画面のまわりに均等</figcaption></figure>
+    <figure><img src="images/03-result.jpg" alt="結果画面"><figcaption>結果。連戦の勝ち数は王冠で</figcaption></figure>
+    <figure><img src="images/02-artist.jpg" alt="アーティスト指定"><figcaption>アーティスト名を打つと曲数が出る</figcaption></figure>
+    <figure><img src="images/04-setup.jpg" alt="設定画面"><figcaption>再生秒数とどこから鳴らすか</figcaption></figure>
+    <figure><img src="images/05-launch.jpg" alt="起動画面"><figcaption>起動画面</figcaption></figure>
+  </div>
+</section>
+
+<section id="faq" class="wrap">
+  <div class="center">
+    <p class="kicker">FAQ &amp; SPEC</p>
+    <h2>よくある質問</h2>
+  </div>
+  <div class="split">
+    <div>
+      <details open>
+        <summary>Apple Musicの契約は必要ですか？</summary>
+        <p>いりません。契約が無いときは各曲の試聴（約30秒）から出題します。契約があると曲ぜんぶが対象になり、「半分から」「全体からランダム」といった再生位置も選べるようになります。</p>
+      </details>
+      <details>
+        <summary>自分のライブラリの曲は出ますか？</summary>
+        <p>出ません。出題はApple Musicのカタログから直接集めています。端末のライブラリ・プレイリスト・再生履歴は読み取っていないので、持ち主だけが有利になることはありません。</p>
+      </details>
+      <details>
+        <summary>通信は必要ですか？</summary>
+        <p>必要です。ゲーム開始時に曲を集めてダウンロードします。始まってしまえば途中で止まることはありません。</p>
+      </details>
+      <details>
+        <summary>ひとりでも遊べますか？</summary>
+        <p>人数は2人からです。タイムアタック的にひとりで遊びたい場合は2人に設定して、両方を自分で操作してください。</p>
+      </details>
+    </div>
+    <div>
+      <table class="spec">
+        <tr><th>対応</th><td>iPhone / iOS 17 以降</td></tr>
+        <tr><th>人数</th><td>2〜12人</td></tr>
+        <tr><th>カード</th><td>8〜48枚（4〜24曲）</td></tr>
+        <tr><th>再生</th><td>2〜15秒／再生位置・決め方を選択可</td></tr>
+        <tr><th>出題範囲</th><td>11ジャンル × 7年代 × 人気順、またはアーティスト指定</td></tr>
+        <tr><th>音源</th><td>Apple Music カタログ（契約なしは試聴約30秒）</td></tr>
+        <tr><th>価格</th><td>準備中</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="note">Apple Music および iPhone は Apple Inc. の商標です。本アプリは Apple Inc. とは関係ありません。曲・ジャケット画像の権利は各権利者に帰属します。</p>
+    <p><a href="privacy.html" style="color:rgba(234,236,244,.55); text-decoration:none">プライバシーポリシー / Privacy Policy</a></p>
+    <p>© 2026 音の神経衰弱</p>
+  </div>
+</footer>
+</body>
+</html>
